@@ -2,7 +2,7 @@ import os
 import hashlib
 import dropbox.files
 
-directory = "../../work/env/"
+directory = ""
 
 
 class DropboxUploader:
