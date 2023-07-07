@@ -1,6 +1,7 @@
 import os
 import hashlib
 import dropbox.files
+import dropbox.exceptions
 
 # Set the directory path where the files are located
 directory = ""
@@ -75,8 +76,46 @@ class DropboxUploader:
                 # If the file does not exist locally, delete it from Dropbox
                 self.dbx.files_delete_v2(f"/{file}")
 
+    def download_changed(self):
+        # Get the list of filenames and their content hashes from the Dropbox folder
+        cloud_files = {e.name: e.content_hash for e in self.dbx.files_list_folder("").entries}
+        changed_files = []
+
+        # Traverse through the local directory
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Get the relative path of the file
+                relative_path = os.path.relpath(file_path, directory)
+                # Construct the cloud file path using the relative path
+                cloud_file_path = f"/{relative_path}"
+
+                # Check if the file is already present in the Dropbox folder
+                if file in cloud_files.keys():
+                    local_hash = self.dropbox_content_hash(file_path)
+                    # Compare the local hash with the cloud content hash
+                    if local_hash != cloud_files[file]:
+                        changed_files.append(file)
+                        print(f"File Changed: {file}")
+                        # If the hashes don't match, download the file from Dropbox
+                        try:
+                            _, response = self.dbx.files_download(cloud_file_path)
+                            downloaded_data = response.content
+                            with open(file_path, "wb") as f:
+                                f.write(downloaded_data)
+                        except dropbox.exceptions.ApiError as e:
+                            print(f"Error downloading file '{file}': {e}")
+                    else:
+                        print(f"File Not Changed: {file}")
+                else:
+                    print(f"File Not Found: {file}")
+
+        return changed_files
+
 
 # Create an instance of DropboxUploader and call the delete_removed method
 DropboxUploader("token.txt").delete_removed()
 # Create another instance of DropboxUploader and call the upload_changed method
 DropboxUploader("token.txt").upload_changed()
+# Create another instance of DropboxUploader and call the download_changed method
+DropboxUploader("token.txt").download_changed()
