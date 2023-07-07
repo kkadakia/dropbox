@@ -41,6 +41,8 @@ The script consists of the following main components:
 
 - **upload_changed method**: This method compares the files in the local directory with the files in Dropbox. It uploads any files that have changed (by comparing their content hashes) and logs the changes.
 
+- **download_changed method**: This method compares the files in Dropbox with files in the local directory. It uploads any files that have changed (by comparing their content hashes) and logs the changes.
+
 - **delete_removed method**: This method compares the files in Dropbox with the files in the local directory. It deletes any files that were removed locally from Dropbox and logs the deletions.
 
 - **Main code**: The main code at the bottom of the script creates an instance of the DropboxUploader class and calls the `delete_removed` and `upload_changed` methods to synchronize the files.
